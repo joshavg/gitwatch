@@ -14,7 +14,6 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.transport.FetchResult;
 
 public class FetchAll implements State {
 
@@ -35,9 +34,10 @@ public class FetchAll implements State {
                     .setGitDir(repo.getPath().toFile())
                     .build();
                 Git git = new Git(gitRepo);
-                FetchResult fetch = git.fetch().setCheckFetchedObjects(true).call();
+                git.fetch().setCheckFetchedObjects(true).call();
 
-                CliOut.writeln("%s: %s", repo.getName(), fetch.getMessages());
+                CliOut.writeln("%s: %d uncommitted changes", repo.getName(),
+                    git.status().call().getUncommittedChanges().size());
             } catch (IOException e) {
                 CliOut.writeln("io exception: %s", e.getMessage());
             } catch (InvalidRemoteException e) {

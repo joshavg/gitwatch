@@ -3,13 +3,13 @@ package de.joshavg.gitwatch.state;
 import static de.joshavg.gitwatch.cli.CliOut.writeln;
 
 import de.joshavg.gitwatch.Config;
+import de.joshavg.gitwatch.Repo;
 import de.joshavg.gitwatch.cli.CliApplication;
 import de.joshavg.gitwatch.cli.State;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,8 +63,10 @@ public class AddRecursive implements State {
             return;
         }
 
-        cfg.setConfigValue("repo." + input, gitDirs.get(gitIndex).toString());
-        cfg.save();
+        if (!"nope".equals(input)) {
+            cfg.setConfigValue("repo." + input, gitDirs.get(gitIndex).toString());
+            cfg.save();
+        }
 
         gitIndex++;
         if (gitIndex < gitDirs.size()) {
@@ -75,18 +77,24 @@ public class AddRecursive implements State {
     }
 
     private void askForName() {
-        writeln("name for repo in path %s", gitDirs.get(gitIndex));
+        writeln("name for repo in path %s - (nope to ignore this repo)", gitDirs.get(gitIndex));
         state = 2;
     }
 
     private void fetchGitDirs(String input) {
         writeln("searching for .git dirs in %s", input);
+        List<Repo> repos = new Config().getRepos();
+        List<Path> paths = repos.stream().map(r -> r.getPath())
+            .collect(Collectors.toList());
+
         try {
             gitDirs = Files.walk(Paths.get(input))
                 .filter(p -> p.toString().endsWith(".git") && p.toFile().isDirectory())
+                .filter(p -> !paths.contains(p))
                 .collect(Collectors.toList());
             for (Path p : gitDirs) {
-                writeln("found dir: %s", p.toString());
+                String stringPath = p.toString();
+                writeln("found dir: %s", stringPath);
                 // try to build
                 new FileRepositoryBuilder()
                     .setGitDir(p.toFile())
@@ -96,7 +104,7 @@ public class AddRecursive implements State {
             writeln("that's all - next step [enter]");
             state = 1;
         } catch (IOException e) {
-            writeln("io exception occured: %s", e.getMessage());
+            writeln("io exception occurred: %s", e.getMessage());
             app.toDefaultState();
         }
     }
