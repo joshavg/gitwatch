@@ -46,7 +46,8 @@ public class ListStatus implements State {
                     table.add(new String[]{
                         repo.getName(),
                         status.isClean() ? "✓" : "✗",
-                        Integer.toString(status.getUncommittedChanges().size())});
+                        Integer.toString(status.getModified().size()),
+                        Integer.toString(status.getAdded().size())});
                 }
             } catch (IOException e) {
                 CliOut.writeln("error instantiating repo: %s", e.getMessage());
@@ -58,7 +59,7 @@ public class ListStatus implements State {
         }
 
         CliOut.writeln(FlipTableConverters.fromObjects(
-            new String[]{"Name", "Status", "# of changes"},
+            new String[]{"Name", "Status", "Modified", "Added"},
             table.toArray(new String[0][])));
 
         app.toDefaultState();
