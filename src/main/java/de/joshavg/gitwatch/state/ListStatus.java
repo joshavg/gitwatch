@@ -15,6 +15,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.NoWorkTreeException;
+import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
@@ -41,13 +42,16 @@ public class ListStatus implements State {
                 Git git = new Git(gitRepo);
 
                 Status status = git.status().call();
+                BranchTrackingStatus bts = BranchTrackingStatus.of(gitRepo, gitRepo.getBranch());
 
                 if ("ls".equals(app.getCurrentLine()) || !status.isClean()) {
                     table.add(new String[]{
                         repo.getName(),
+                        gitRepo.getBranch(),
                         status.isClean() ? "✓" : "✗",
                         Integer.toString(status.getModified().size()),
-                        Integer.toString(status.getAdded().size())});
+                        bts == null ? "?" : Integer.toString(bts.getAheadCount()),
+                        bts == null ? "?" : Integer.toString(bts.getBehindCount())});
                 }
             } catch (IOException e) {
                 CliOut.writeln("error instantiating repo: %s", e.getMessage());
@@ -59,7 +63,7 @@ public class ListStatus implements State {
         }
 
         CliOut.writeln(FlipTableConverters.fromObjects(
-            new String[]{"Name", "Status", "Modified", "Added"},
+            new String[]{"Name", "Branch", "Status", "Modified", "Ahead", "Behind"},
             table.toArray(new String[0][])));
 
         app.toDefaultState();
