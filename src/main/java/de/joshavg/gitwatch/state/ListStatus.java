@@ -44,7 +44,10 @@ public class ListStatus implements State {
                 Status status = git.status().call();
                 BranchTrackingStatus bts = BranchTrackingStatus.of(gitRepo, gitRepo.getBranch());
 
-                if ("ls".equals(app.getCurrentLine()) || !status.isClean()) {
+                boolean repoHasChanges =
+                    !status.isClean() ||
+                        bts != null && (bts.getAheadCount() > 0 || bts.getBehindCount() > 0);
+                if ("ls".equals(app.getCurrentLine()) || repoHasChanges) {
                     table.add(new String[]{
                         repo.getName(),
                         gitRepo.getBranch(),

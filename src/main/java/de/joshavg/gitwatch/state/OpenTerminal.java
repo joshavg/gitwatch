@@ -22,7 +22,12 @@ public class OpenTerminal implements State {
 
     @Override
     public void onEnter() {
-        writeln("Enter name");
+        String[] split = app.getCurrentLine().split(" ");
+        if (split.length == 2) {
+            handle(split[1]);
+        } else {
+            writeln("Enter name");
+        }
     }
 
     @Override

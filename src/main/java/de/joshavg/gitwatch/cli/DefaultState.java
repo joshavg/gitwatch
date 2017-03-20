@@ -33,13 +33,15 @@ class DefaultState implements State {
         if ("exit".equals(input)) {
             app.exit();
             return;
-        } else if ("help".equals(input)) {
+        } else if ("help".equals(input) || input == null) {
             app.outputStates();
             return;
         }
 
         Optional<State> stateOptional = states.stream()
-            .filter(s -> s.getTransitions().contains(input))
+            .filter(s ->
+                s.getTransitions().contains(input)
+                    || s.getTransitions().stream().anyMatch(t -> input.startsWith(t + " ")))
             .findFirst();
 
         if (stateOptional.isPresent()) {
